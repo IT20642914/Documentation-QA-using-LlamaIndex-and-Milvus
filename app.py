@@ -13,8 +13,8 @@ def process_csv():
 
 @app.route('/search', methods=['GET'])
 def search():
-    text = request.args.get('text')
-    results = search_in_milvus(text)
+    search_term = request.args.get('q')
+    results = search_in_milvus(search_term)
     return jsonify(results)
 
 if __name__ == '__main__':

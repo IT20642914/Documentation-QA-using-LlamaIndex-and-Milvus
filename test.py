@@ -37,12 +37,11 @@ logger.addHandler(console_handler)
 
 
 # Extract the book titles
-def csv_load(file):
-    with open(file, newline='') as f:
+def csv_load(filepath):
+  with open(filepath, newline='') as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
-            yield row[1]
-
+            yield row  # Yield entire row
 # Embed text with error handling
 def embed_with_error_handling(text):
     try:
@@ -242,5 +241,65 @@ def get_collections():
     collections = utility.list_collections()
     logger.info("collections:{collections}}")  
     return jsonify({"collections": collections}), 200
+
+# Endpoint to create collection from CSV file and store data
+@app.route('/create_and_store_data', methods=['POST'])
+
+def create_and_store_data():
+    file = 'csv/Questions Master _ ChildOther.csv'  # Replace with your CSV file path
+    collection_name = 'QuestionsMaster_ChildOther'
+
+    MILVUS_HOST = os.environ.get('MILVUS_HOST')
+    MILVUS_PORT = os.environ.get('MILVUS_PORT')
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+    openai.api_key = OPENAI_API_KEY  # Replace with your OpenAI API key
+
+    try:
+        connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+
+        if utility.has_collection(collection_name):
+            return jsonify({"message": f"Collection '{collection_name}' already exists."}), 200
+
+        with open(file, newline='') as f:
+            reader = csv.reader(f)
+            header = next(reader)  # Get header to dynamically create FieldSchema
+
+            fields = []
+            primary_key_added = False
+
+            for col_name in header:
+                # Add primary key field if it's 'question_id'
+                if col_name == 'question_id':
+                    field = FieldSchema(name=col_name, dtype=DataType.INT64, is_primary=True)
+                    primary_key_added = True
+                else:
+                    field = FieldSchema(name=col_name, dtype=DataType.VARCHAR, max_length=256)  # Change the max_length value as per your requirements
+                fields.append(field)
+
+            if not primary_key_added:
+                return jsonify({"error": "No primary key field ('question_id') found in the schema."}), 400
+
+            # Add a vector field for storing embeddings/vectors (using OpenAI's embedding dimension)
+            fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512))  # Assuming OpenAI's embeddings are of dimension 512
+
+            schema = CollectionSchema(fields=fields, description="Dynamic Collection from CSV")
+            collection = Collection(name=collection_name, schema=schema)
+            collection.create()
+
+            # Insert data into the created collection
+            data_to_insert = []
+            for idx, row in enumerate(reader):
+                row_dict = {header[i]: row[i] for i in range(len(header))}
+                text = row_dict['question',]  # Replace 'text_to_embed' with the column name containing the text for which you want embeddings
+                embedding = openai.Embedding.create(input=text, engine="text-embedding-ada-002")['data'][0]['embedding']
+                row_dict['embedding'] = embedding
+                data_to_insert.append(row_dict)
+
+            collection.insert(data_to_insert)
+            
+            return jsonify({"message": f"Collection '{collection_name}' created and data stored successfully."}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)

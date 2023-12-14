@@ -1,9 +1,13 @@
-import os
+from flask import Flask, request, jsonify
 import csv
+import random
+import os
 import openai
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 import logging
 import colorlog
+from dotenv import load_dotenv
+import time
 
 # Load environment variables or set them directly
 MILVUS_HOST = os.environ.get('MILVUS_HOST')
@@ -39,99 +43,120 @@ MILVUS_PORT = MILVUS_PORT
 OPENAI_ENGINE = OPENAI_ENGINE
 openai.api_key = OPENAI_API_KEY
 
-# Define 'collection' as a global variable
-collection = None
-
-def get_collection_name(file_path):
-    # Extract file name without extension
-    file_name = os.path.splitext(os.path.basename(file_path))[0]
-    return file_name
-
+# Extract the book titles
 def csv_load(file):
     with open(file, newline='') as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
             yield row[1]
-
+# Embed text with error handling
 def embed_with_error_handling(text):
     try:
         embedding = openai.Embedding.create(
             input=text, 
-            engine=OPENAI_ENGINE
+            engine=os.environ.get('OPENAI_ENGINE')
         )["data"][0]["embedding"]
-        return embedding
+        return embedding  # Ensure this returns a list of numbers
     except Exception as e:
         logger.error(f"Error embedding text: {text}. Error: {str(e)}")
         return None
 
-def connect_milvus():
+
+def save_to_milvus():
+    current_directory = os.getcwd()
+    FILE = 'csv/Questions Master _ ChildOther.csv'  # Update the file path separator to '/'
+    FilePath = os.path.join(current_directory, FILE)
+    COLLECTION_NAME = 'title_db'
+    DIMENSION = 1536
+
+    MILVUS_HOST = os.environ.get('MILVUS_HOST')
+    MILVUS_PORT = os.environ.get('MILVUS_PORT')
+
+    # Connect to Milvus
     connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
     logger.info("Connected to Milvus.")
 
-def create_collection(file_path):
-    global collection  # Define 'collection' as a global variable to be accessed in other functions
-    collection_name = get_collection_name(file_path)
-    file_name = os.path.splitext(collection_name)[0]  # Extract file name without extension
-    collection_name = ''.join(c if c.isalnum() or c == '_' else '' for c in file_name)
-    if not utility.has_collection(collection_name):
-        fields = [
-            FieldSchema(name='id', dtype=DataType.INT64, description='Ids', is_primary=True, auto_id=False),
-            FieldSchema(name='title', dtype=DataType.VARCHAR, description='Title texts', max_length=200),
-            FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, description='Embedding vectors', dim=1536)
-        ]
-        schema = CollectionSchema(fields=fields, description='Title collection')
-        collection = Collection(name=collection_name, schema=schema)
-        index_params = {
-            'index_type': 'IVF_FLAT',
-            'metric_type': 'L2',
-            'params': {'nlist': 1024}
-        }
-        collection.create_index(field_name='embedding', index_params=index_params)
-        logger.info(f"Created collection '{collection_name}' schema and index for the collection.")
-        
+    # Create collection schema and other setup steps...
 
-def save_to_milvus(count=100):
-    global collection  # Access the global 'collection' variable
-    current_directory = os.getcwd()
-    FILE = 'csv/Questions Master _ ChildOther.csv'
-    FilePath = os.path.join(current_directory, FILE)
-    
-    connect_milvus()
-    create_collection(FILE)
-
+    # Insert each title and its embedding with error handling
+    collection = Collection(name=COLLECTION_NAME)  # Create collection object
+   # Assuming your Milvus collection expects three fields: 'id', 'title', 'embedding'
     for idx, text in enumerate(csv_load(FilePath)):
-        if idx >= count:
-            break
-
+        logger.debug(f"Inserting text '{text}' with index '{idx}'.")
         embedding = embed_with_error_handling(text)
         if embedding is not None:
             ins = [
-                [idx],
-                [(text[:198] + '..') if len(text) > 200 else text],
-                [embedding]
+                {'id': idx, 'title': text[:198] if len(text) > 200 else text, 'embedding': embedding}
             ]
             try:
                 collection.insert(ins)
                 logger.debug(f"Text '{text}' inserted successfully.")
+                time.sleep(3)  # Free OpenAI account limited to 60 RPM
             except Exception as e:
                 logger.error(f"Error inserting text '{text}' into collection. Error: {str(e)}")
 
-def search_in_milvus(text):
-    global collection  # Access the global 'collection' variable
-    connect_milvus()
-    results = []
-    embedded_text = embed_with_error_handling(text)
-    if embedded_text:
-        search_params = {"metric_type": "L2"}
-        try:
-            results = collection.search(
-                data=[embedded_text],
-                anns_field="embedding",
-                param=search_params,
-                limit=5,
-                output_fields=['title']
-            )
-        except Exception as e:
-            logger.error(f"Error searching for text '{text}' in collection. Error: {str(e)}")
+    # Load the collection into memory for searching
+    collection.load()
+    logger.info("Loaded collection into memory for searching.")
 
-    return results
+    return jsonify({"message": "File processed and data inserted into the collection."})
+
+
+def search_in_milvus(search_term):
+        search_term = search_term
+
+        MILVUS_HOST = os.environ.get('MILVUS_HOST')
+        MILVUS_PORT = os.environ.get('MILVUS_PORT')
+
+        # Connect to Milvus
+        connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+        logger.info("Connected to Milvus.")
+
+        # Fetch all collections
+        collections = utility.list_collections()
+
+        logger.info("Collections in Milvus:")
+        search_results_per_collection = {}
+
+        for collection_name in collections:
+            logger.info(f'collection_name: {collection_name}')
+
+            # Search text in each collection
+            search_results = search_in_collection(collection_name, search_term)
+
+            # Store search results for this collection
+            search_results_per_collection[collection_name] = search_results
+
+        return jsonify({"results": search_results_per_collection})
+    
+def search_in_collection(collection_name, search_term):
+    # Get the collection object
+    collection = Collection(collection_name)
+
+    def search_with_error_handling(text):
+        try:
+            logger.debug(f"Searching for text '{text}' in collection '{collection_name}'.")
+            embedded_text = embed_with_error_handling(text)
+            if embedded_text:
+                search_params = {"metric_type": "L2"}
+                results = collection.search(
+                    data=[embedded_text],
+                    anns_field="embedding",
+                    param=search_params,
+                    limit=5,
+                    output_fields=['title']
+                )
+                ret = []
+                for hit in results[0]:
+                    row = [hit.id, hit.score, hit.entity.get('title')]
+                    ret.append(row)
+                return ret
+            else:
+                return []
+        except Exception as e:
+            logger.error(f"Error searching for text '{text}' in collection '{collection_name}'. Error: {str(e)}")
+            return []
+
+    # Perform searches using only the provided search term
+    search_results = search_with_error_handling(search_term)
+    return {search_term: search_results} if search_results else {}
