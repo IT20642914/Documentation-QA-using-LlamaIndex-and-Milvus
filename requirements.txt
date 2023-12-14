@@ -1,3 +1,4 @@
 pandas 
 llama-index
 pymilvus
+openai==0.28
