@@ -6,7 +6,9 @@ import time
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 import logging
 import colorlog
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 # Set up the logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -54,13 +56,18 @@ COLLECTION_NAME = 'title_db'
 DIMENSION = 1536
 with open(FILE, newline='') as f:
     row_count = sum(1 for row in csv.reader(f))
-
 # Use the minimum of row_count and a specified maximum count
-COUNT = min(row_count, 100)  
-MILVUS_HOST = 'localhost'
-MILVUS_PORT = '19530'
-OPENAI_ENGINE = 'text-embedding-ada-002'
-openai.api_key = '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'  # Use your own Open AI API Key here
+COUNT = min(row_count, 100) # Free OpenAI account limited to 100k tokens per month
+
+MILVUS_HOST = os.environ.get('MILVUS_HOST')
+MILVUS_PORT = os.environ.get('MILVUS_PORT')
+OPENAI_ENGINE = os.environ.get('OPENAI_ENGINE')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+MILVUS_HOST = MILVUS_HOST
+MILVUS_PORT =MILVUS_PORT
+OPENAI_ENGINE = OPENAI_ENGINE
+openai.api_key = OPENAI_API_KEY  # 
 
 # Connect to Milvus
 connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
