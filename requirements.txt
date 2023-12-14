@@ -1,0 +1,4 @@
+pandas 
+llama-index
+pymilvus
+csv
