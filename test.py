@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import csv
 import random
 import os
+import pandas as pd
 import openai
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 import logging
@@ -242,64 +243,91 @@ def get_collections():
     logger.info("collections:{collections}}")  
     return jsonify({"collections": collections}), 200
 
-# Endpoint to create collection from CSV file and store data
-@app.route('/create_and_store_data', methods=['POST'])
+def handle_empty_values(value):
+    # Check if the value is empty or null
+    if pd.isnull(value) or value == '':
+        # If the value is empty or null, replace it with a default string value or handle it based on your use case
+        return 'N/A'  # For example, replacing empty values with 'N/A'
+    else:
+        return str(value) 
 
+def create_collection_schema(header):
+    fields = [
+        # Create FieldSchema based on the header
+        FieldSchema(name=col_name, dtype=DataType.STRING if col_name == 'question_id' else DataType.STRING, max_length=256 if col_name != 'question_id' else None)
+        for col_name in header
+    ]
+    logger.info(f"fields:{fields}")
+    fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512))
+    return CollectionSchema(fields=fields, description="Dynamic Collection from CSV")
+
+
+def process_csv_data(file, collection):
+  logger.info(f"Processing CSV data from file: {file}")
+  with open(file, newline='') as f:
+    logger.info(f"Opened file: {file}")
+    reader = csv.reader(f)
+    header = next(reader)  
+    logger.info(f"Processing CSV data - header: {header}")
+    data_to_insert = []
+    
+    for row in reader:
+        row_dict = {header[i]: row[i] for i in range(len(header))}
+        logger.debug(f"row_dict:{row_dict}")
+        text = row_dict['question_id']
+        logger.info(f"text TO Embedding:{text}")
+        try:
+            embedding = openai.Embedding.create(input=text, engine="text-embedding-ada-002")['data'][0]['embedding']
+            logger.info(f"embedding:{embedding[0]}")
+            row_dict['embedding'] = embedding
+        except Exception as embedding_error:
+            logger.error(f"Embedding creation error: {str(embedding_error)}")
+            row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+        
+        data_to_insert.append(row_dict)
+        logger.debug(f"data_to_insert:{data_to_insert}")
+    try:
+        collection.insert(data_to_insert)
+        logger.info("Data inserted into collection successfully")
+    except Exception as insert_error:
+        logger.error(f"Data insertion error: {str(insert_error)}")
+        
+@app.route('/create_and_store_data', methods=['POST'])
 def create_and_store_data():
-    file = 'csv/Questions Master _ ChildOther.csv'  # Replace with your CSV file path
+    file = 'csv/Questions Master _ ChildOther.csv'
     collection_name = 'QuestionsMaster_ChildOther'
 
     MILVUS_HOST = os.environ.get('MILVUS_HOST')
     MILVUS_PORT = os.environ.get('MILVUS_PORT')
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
-    openai.api_key = OPENAI_API_KEY  # Replace with your OpenAI API key
+    openai.api_key = OPENAI_API_KEY
 
     try:
+        # Establish Milvus connection
         connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+    except Exception as milvus_conn_error:
+        logger.error(f"Milvus connection error: {str(milvus_conn_error)}")
+        return jsonify({"error": f"Milvus connection error: {str(milvus_conn_error)}"}), 500
 
-        if utility.has_collection(collection_name):
-            return jsonify({"message": f"Collection '{collection_name}' already exists."}), 200
+    try:
+        # List collections
+        collections = utility.list_collections()
 
-        with open(file, newline='') as f:
-            reader = csv.reader(f)
-            header = next(reader)  # Get header to dynamically create FieldSchema
-
-            fields = []
-            primary_key_added = False
-
-            for col_name in header:
-                # Add primary key field if it's 'question_id'
-                if col_name == 'question_id':
-                    field = FieldSchema(name=col_name, dtype=DataType.INT64, is_primary=True)
-                    primary_key_added = True
-                else:
-                    field = FieldSchema(name=col_name, dtype=DataType.VARCHAR, max_length=256)  # Change the max_length value as per your requirements
-                fields.append(field)
-
-            if not primary_key_added:
-                return jsonify({"error": "No primary key field ('question_id') found in the schema."}), 400
-
-            # Add a vector field for storing embeddings/vectors (using OpenAI's embedding dimension)
-            fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512))  # Assuming OpenAI's embeddings are of dimension 512
-
-            schema = CollectionSchema(fields=fields, description="Dynamic Collection from CSV")
+        if collection_name not in collections:
+            schema = create_collection_schema(pd.read_csv(file).columns)
             collection = Collection(name=collection_name, schema=schema)
             collection.create()
-
-            # Insert data into the created collection
-            data_to_insert = []
-            for idx, row in enumerate(reader):
-                row_dict = {header[i]: row[i] for i in range(len(header))}
-                text = row_dict['question',]  # Replace 'text_to_embed' with the column name containing the text for which you want embeddings
-                embedding = openai.Embedding.create(input=text, engine="text-embedding-ada-002")['data'][0]['embedding']
-                row_dict['embedding'] = embedding
-                data_to_insert.append(row_dict)
-
-            collection.insert(data_to_insert)
-            
+            process_csv_data(file, collection)
             return jsonify({"message": f"Collection '{collection_name}' created and data stored successfully."}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        else:
+            collection = Collection(name=collection_name)
+            process_csv_data(file, collection)
+            return jsonify({"message": f"Collection '{collection_name}' already exists. Data inserted successfully."}), 200
+    except Exception as collection_error:
+        logger.error(f"Collection creation or insertion error: {str(collection_error)}")
+        return jsonify({"error": f"Collection creation or insertion error: {str(collection_error)}"}), 500
+
+    
 if __name__ == '__main__':
     app.run(debug=True)

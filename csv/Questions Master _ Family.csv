@@ -19,32 +19,3 @@ question_id,question_category,question_sub_category,question_means,question,ques
 18,Family,Meals,Q to Parents,Does the Child have any rigid eating preferences/sensitivity to food,Choice,1,Yes,,49,"[""Yes"", ""No""]",4
 19,Family,Meals,Q to Parents,"If yes, please list what type of foods the Child will eat",Text,1,,,,,5
 20,Family,Meals,Q to Parents,"If yes, please list what type of foods the Child will NOT eat",Text,1,,,,,5
-21,Family,Meals,Q to Parents,Does the neighborhood include several grocery stores within a 5 mile radius?,Choice,1,No,,50,"[""Yes"", ""No""]",6
-22,Family,Meals,Q to Parents,Does your child eat all three meals consistently or is their meal consumption inconsistent?,Choice,1,Inconsistent,,51,"[""Consistent"", ""Inconsistent""]",6
-23,Family,Meals,Q to Both,What do you / your child typically eat for breakfast on weekdays?,Text,1,,,,,4
-24,Family,Meals,Q to Both,Is the Child's weekday breakfast healthy? (Observed),Choice,1,No,,53,"[""Yes"", ""Usually"", ""Sometimes"", ""No""]",4
-25,Family,Meals,Q to Both,What do you / your child typically eat for lunch on weekdays?,Text,1,,,,,4
-26,Family,Meals,Q to Both,Is the Child's weekday lunch healthy? (Observed),Choice,1,No,,55,"[""Yes"", ""Usually"", ""Sometimes"", ""No""]",4
-27,Family,Meals,Q to Both,Does the child eat dinner at home?,Choice,1,No,,56,"[""Yes"", ""Usually"", ""Sometimes"", ""No""]",4
-28,Family,Meals,Q to Both,Describe a typical home cooked dinner,Text,,,,,,4
-29,Family,Meals,Q to Both,Are most weekday dinners cooked at home and healthy? (>4 weekdays) (Observed),Choice,1,No,,57,"[""Yes"", ""No""]",4
-30,Family,Meals,Q to Both,Are most weekend meals cooked at home? (>50%),Choice,1,No,,58,"[""Yes"", ""No""]",4
-31,Family,Meals,Q to Both,How much soda or juice do you / your child consume daily? In cups,Numeric,1,,,,,4
-32,Family,Meals,Q to Both,Does the child consume more than 1 cup of soda or juices daily? (Observed),Choice,1,Yes,,59,"[""Yes"", ""No""]",4
-33,Family,Meals,Q to Parents,Does your child consume a lot of snacks on a daily basis?,Choice,1,Yes,,60,"[""Yes"", ""No""]",4
-34,Family,Meals,Q to Parents,Is there a particular time of day your Child likes to snack?,Text,1,,,,,4
-35,Family,Meals,Q to Parents,"If yes, what are your child's go to snacks? ",Text,1,,,,,4
-36,Family,Meals,Q to Both,Does the family eat dinner together on weekdays?,Choice,1,No,,61,"[""Yes"", ""Usually"", ""Sometimes"", ""No""]",4
-37,Family,Meals,Q to Both,Does the family eat weekend meals together?,Choice,1,No,,62,"[""Yes"", ""Usually"", ""Sometimes"", ""No""]",4
-38,Family,Meals,Q to Parents,Does the child consume the recommended amount of fruits and vegetables daily? (Observed),Choice,1,No,,63,"[""Yes"", ""No""]",4
-39,Family,Meals,Q to Parents,Does the child consume the recommended quantity of red meat? (Observed),Choice,1,No,,64,"[""Yes"", ""No""]",4
-40,Family,Meals,Q to Parents,Does the child consume  the recommended quantity of starch? (Observed),Choice,1,No,,65,"[""Yes"", ""No""]",4
-41,Family,Meals,Q to Parents,Does the child consume the recommended quantity of protein? (Observed),Choice,1,No,,66,"[""Yes"", ""No""]",4
-42,Family,Meals,Q to Parents,Does the child consume more than the recommended quantify of sugar?,Choice,1,Yes,,67,"[""Yes"", ""No""]",4
-43,Family,Meals,Q to Parents,Is the sugar consumed a natural sugar or added sugar? Fresh fruits Vs Cookies,Choice,1,Added Sugar,,68,"[""Natural Sugar"", ""Added Sugar""]",4
-44,Family,Meals,Q to Parents,Does your child participate in meal preparation?,Choice,1,No_Rarely,,69,"[""Some_Most times"", ""No_Rarely""]",4
-45,Family,Sleep,Q to Both,Does the child keep a consistent sleep schedule?,Choice,1,No,,70,"[""Yes"", ""No""]",4
-46,Family,Sleep,Q to Both,What is the average number hours you / your Child sleeps on a typical weekday?,Numeric,1,,,,,4
-47,Family,Sleep,Q to Both,Does the child get sufficient sleep on weekdays appropriate for their age? (Observed),Choice,1,No,,71,"[""Yes"", ""No""]",4
-48,Family,Sleep,Q to Both,What is the average number of hours you / your Child sleep on a typical weekend?,Numeric,1,,,,,4
-49,Family,Sleep,Q to Both,Does the child get sufficient sleep on weekends appropriate for their age?,Choice,1,No,,72,"[""Yes"", ""No""]",4
