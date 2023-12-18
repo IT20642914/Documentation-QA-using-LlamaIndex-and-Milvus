@@ -79,9 +79,7 @@ def process_file():
         logger.debug(f"Inserting text '{text}' with index '{idx}'.")
         embedding = embed_with_error_handling(text)
         if embedding is not None:
-            ins = [
-                {'id': idx, 'title': text[:198] if len(text) > 200 else text, 'embedding': embedding}
-            ]
+            ins = [[idx], [(text[:198] + '..') if len(text) > 200 else text], [embedding]]
             try:
                 collection.insert(ins)
                 logger.debug(f"Text '{text}' inserted successfully.")
