@@ -51,12 +51,10 @@ def embed_with_error_handling(text):
         return None
 
 # Set up variables
-current_directory = os.getcwd()
-FILE = 'csv\Questions Master _ ChildOther.csv'
-FilePath = os.path.join(current_directory, FILE)
+FILE = 'csv/Questions Master _ ChildOther.csv'
 COLLECTION_NAME = 'title_db'
 DIMENSION = 1536
-with open(FilePath, newline='') as f:
+with open(FILE, newline='') as f:
     row_count = sum(1 for row in csv.reader(f))
 # Use the minimum of row_count and a specified maximum count
 COUNT = min(row_count, 100) # Free OpenAI account limited to 100k tokens per month
@@ -104,16 +102,13 @@ for idx, text in enumerate(random.sample(sorted(csv_load(FILE)), k=COUNT)):
     logger.debug(f"Inserting text '{text}' with index '{idx}'.")
     embedding = embed_with_error_handling(text)
     if embedding is not None:
-        ins = [
-        [idx, text[:198] if len(text) > 200 else text, embedding.tolist()]
-    ]
-    try:
-        collection.insert(ins)
-        logger.debug(f"Text '{text}' inserted successfully.")
-        time.sleep(3)  # Free OpenAI account limited to 60 RPM
-    except Exception as e:
-        logger.error(f"Error inserting text '{text}' into collection. Error: {str(e)}")
-
+        ins = [[idx], [(text[:198] + '..') if len(text) > 200 else text], [embedding]]
+        try:
+            collection.insert(ins)
+            logger.debug(f"Text '{text}' inserted successfully.")
+            time.sleep(3)  # Free OpenAI account limited to 60 RPM
+        except Exception as e:
+            logger.error(f"Error inserting text '{text}' into collection. Error: {str(e)}")
 
 # Load the collection into memory for searching
 collection.load()

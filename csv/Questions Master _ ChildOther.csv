@@ -1,4 +1,4 @@
-question_id,question_category,question_sub_category,question_means,question,question_response_type,activeQuestion,redFlag_option,criticalFocus,rca_id,choice_options,impact_id
+question_id,question_category,question_sub_category,question_means,question,question_response _type,activeQuestion,redFlag_option,criticalFocus,rca_id,choice_options,impact_id
 1,Child Other,Child Goals,Q to Child,What is your primary goal from this program?,Text,1,,,,,1
 2,Child Other,Child Goals,Q to Child,What is your primary goal from this program? (Observed),Choice,1,External_Image,1,11,"[""External_Image"", ""Health_Fitness""]",1
 3,Child Other,Child Goals,Q to Child,Why do you have this goal? What is driving it?,Text,1,,,,,1
@@ -19,3 +19,40 @@ question_id,question_category,question_sub_category,question_means,question,ques
 18,Child Other,Social Skills,Q to Child,What is your weekday like? From when you awake to get back into bed?,Choice,1,Sedentary,,20,"[""Sedentary"", ""Somewhat Active"", ""Active""]",6
 19,Child Other,Social Skills,Q to Child,How about the weekends? What do you do typically?,Choice,1,Sedentary,,21,"[""Sedentary"", ""Somewhat Active"", ""Active""]",6
 20,Child Other,Social Skills,Q to Child,Is the Child's physical activity level appropriate for age? (Observed),Choice,1,No,,18,"[""Yes"", ""No""]",5
+21,Child Other,Social Skills,Q to Parents,"How much time does your child spend online (games, social media) a day? In hours",Text,1,,,,,6
+22,Child Other,Social Skills,Q to Parents,What are you childs favorite social media channels? Top 3,Text,1,,,,,6
+23,Child Other,Social Skills,Q to Parents,Is the parent aware/involved with their child's social media consumption? (Observed),Choice,1,No,,13,"[""Yes"", ""No""]",6
+24,Child Other,Social Skills,Q to Parents,Does your child discuss with you what he's learning from social media?,Choice,1,No,,13,"[""Yes"", ""No""]",6
+25,Child Other,Social Skills,Q to Child,What are your favorite activities to do you online/on your computer?,Text,1,,,,,6
+26,Child Other,Social Skills,Q to Child,What are your favorite social media channels?,Text,1,,,,,6
+27,Child Other,Social Skills,Q to Child,Who do you typically follow and why?,Text,1,,,,,6
+28,Child Other,Social Skills,Q to Child,Who do you typically follow and why? (Observed),Choice,1,Body_Image_Influencers,1,26,"[""Body_Image_Influencers"",""Favorite_Sports"",""Other_Hobbies""]",6
+29,Child Other,Intellectual,Q to Child, Is the Child's communication skills appropriate for their age? (Observed),Choice,1,No,,22,"[""Yes"", ""No""]",5
+30,Child Other,Intellectual,Q to Child,Do you enjoy school? Why / Why not?,Text,1,,,,,5
+31,Child Other,Intellectual,Q to Child,Do you enjoy school? (Observed),Choice,1,No,,23,"[""Yes"", ""No"",""Some times""]",5
+32,Child Other,Intellectual,Q to Child,Do you feel like you need to excel at schoold?,Choice,1,Yes,,24,"[""Yes"", ""No""]",5
+33,Child Other,Intellectual,Q to Child,Do you like learning new subjects or challenging topics? ,Choice,1,No,,25,"[""No"", ""Somewhat"", ""Yes""]",5
+34,Child Other,Intellectual,Q to Child,Do you enjoy reading? What types of books do you gravitade towards?,Choice,1,No,,27,"[""Yes"", ""No""]",5
+35,Child Other,Intellectual,Q to Child,Is the Child tolerant to newer and different ideas?,Choice,1,No,,29,"[""Yes"", ""No""]",5
+36,Child Other,Intellectual,Q to Child,"What are you most passionate about outside of school-work? Like arts, sports, pets, socializing, clubs, etc that you actively participate in",Text,1,,,,,5
+37,Child Other,Intellectual,Q to Child,What are you most passionate about outside of school-work? (Observed),Choice,1,No,,30,"[""Yes"", ""No""]",5
+38,Child Other,Intellectual,Q to Parents,Does your Child have age appropriate time management skills? Are they able to complete their school work and other activities effectively,Choice,1,No,,31,"[""Yes"", ""No""]",5
+39,Child Other,Mindful,Q to Child,Does the Child appear engaged and excited about participating in this program? (Observed),Choice,1,No,1,32,"[""Yes"", ""No""]",1
+40,Child Other,Mindful,Q to Child,Does the Child appear to posses a set of guiding beliefs based on which they lead their life?,Choice,1,No,,33,"[""Yes"", ""No""]",5
+41,Child Other,Mindful,Q to Child,Is the Child a positive or hopeful individual? (Observed),Choice,1,No,,34,"[""Yes"", ""No""]",5
+42,Child Other,Mindful,Q to Child,Why does the Coach believe that the Child is not a positive or hopeful individual? (Observed),Text,1,,,,,5
+43,Child Other,Mindful,Q to Child,Do you enjoy time by yourself without devices?,Choice,1,No,,35,"[""Yes"", ""No""]",5
+44,Child Other,Mindful,Q to Child,Does the Child appear to be inquisitive and curious? (Observed),Choice,1,No,,36,"[""Yes"", ""No""]",5
+45,Child Other,Mindful,Q to Child,Does the Child appear to be self-confident? (Observed),Choice,1,No,,37,"[""Yes"", ""No""]",5
+46,Child Other,Mindful,Q to Both,Do you / your Child get anxious or distressed unexpectedly?,Choice,1,Yes,,38,"[""Yes"", ""No""]",5
+47,Child Other,Mindful,Q to Both,Describe the triggers that cause distress or anxiety,Text,1,,,,,5
+48,Child Other,Mindful,Q to Both,How do you/your Child typically calm down after an anxiety episode?,Text,1,,,,,5
+49,Child Other,Mindful,Q to Both,Do you/ your Child exhibit excessive and unreasonable anger?,Choice,1,Yes,,39,"[""Yes"", ""No""]",5
+50,Child Other,Mindful,Q to Both,"If yes, what usually triggers the anger?",Text,1,,,,,5
+51,Child Other,Mindful,Q to Both,How do you/ your Child calm down after an anger episode?,Text,1,,,,,5
+52,Child Other,Preferences,Q to Child,Favorite Cusine - 1st,Text,1,,,,,5
+53,Child Other,Preferences,Q to Child,Favorite Cusine - 2nd,Text,1,,,,,5
+54,Child Other,Preferences,Q to Child,Favorite Cusine - 3rd,Text,1,,,,,5
+55,Child Other,Preferences,Q to Child,Favorite Activity - 1st,Text,1,,,,,5
+56,Child Other,Preferences,Q to Child,Favorite Activity - 2nd,Text,1,,,,,5
+57,Child Other,Preferences,Q to Child,Favorite Activity - 3rd,Text,1,,,,,5
