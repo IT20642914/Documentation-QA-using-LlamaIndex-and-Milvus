@@ -55,96 +55,7 @@ def embed_with_error_handling(text):
         logger.error(f"Error embedding text: {text}. Error: {str(e)}")
         return None
 
-@app.route('/process_file', methods=['POST'])
-def process_file():
-    current_directory = os.getcwd()
-    FILE = 'csv/Questions Master _ ChildOther.csv'  # Update the file path separator to '/'
-    FilePath = os.path.join(current_directory, FILE)
-    COLLECTION_NAME = 'title_db'
-    DIMENSION = 1536
 
-    MILVUS_HOST = os.environ.get('MILVUS_HOST')
-    MILVUS_PORT = os.environ.get('MILVUS_PORT')
-
-    # Connect to Milvus
-    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
-    logger.info("Connected to Milvus.")
-
-    # Create collection schema and other setup steps...
-
-    # Insert each title and its embedding with error handling
-    collection = Collection(name=COLLECTION_NAME)  # Create collection object
-   # Assuming your Milvus collection expects three fields: 'id', 'title', 'embedding'
-    for idx, text in enumerate(csv_load(FilePath)):
-        logger.debug(f"Inserting text '{text}' with index '{idx}'.")
-        embedding = embed_with_error_handling(text)
-        if embedding is not None:
-            ins = [[idx], [(text[:198] + '..') if len(text) > 200 else text], [embedding]]
-            try:
-                collection.insert(ins)
-                logger.debug(f"Text '{text}' inserted successfully.")
-                time.sleep(3)  # Free OpenAI account limited to 60 RPM
-            except Exception as e:
-                logger.error(f"Error inserting text '{text}' into collection. Error: {str(e)}")
-
-    # Load the collection into memory for searching
-    collection.load()
-    logger.info("Loaded collection into memory for searching.")
-
-    return jsonify({"message": "File processed and data inserted into the collection."})
-
-
-# @app.route('/search', methods=['GET'])
-# def search():
-#     search_term = request.args.get('q')
-
-#     MILVUS_HOST = os.environ.get('MILVUS_HOST')
-#     MILVUS_PORT = os.environ.get('MILVUS_PORT')
-
-#     # Connect to Milvus
-#     connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
-#     logger.info("Connected to Milvus.")
-   
-
-#     # Fetch all collections
-#     collections = utility.list_collections()
-
-#     logger.info("Collections in Milvus:")
-#     for collection_name in collections:
-#         logger.info(f'collection_name: {collection_name}')
-#     def search_with_error_handling(text):
-#         try:
-#             logger.debug(f"Searching for text '{text}' in collection.")
-#             embedded_text = embed_with_error_handling(text)
-#             if embedded_text:
-#                 search_params = {"metric_type": "L2"}
-#                 results = collection.search(
-#                     data=[embedded_text],
-#                     anns_field="embedding",
-#                     param=search_params,
-#                     limit=5,
-#                     output_fields=['title']
-#                 )
-#                 ret = []
-#                 for hit in results[0]:
-#                     row = [hit.id, hit.score, hit.entity.get('title')]
-#                     ret.append(row)
-#                 return ret
-#             else:
-#                 return []
-#         except Exception as e:
-#             logger.error(f"Error searching for text '{text}' in collection. Error: {str(e)}")
-#             return []
-
-#     # Perform searches
-#     search_terms = [search_term] if search_term else ['self-improvement', 'landscape']
-
-#     search_results = {}
-#     for term in search_terms:
-#         results = search_with_error_handling(term)
-#         search_results[term] = results
-
-#     return jsonify({"results": search_results})
 @app.route('/search', methods=['GET'])
 def search():
     search_term = request.args.get('q')
@@ -251,45 +162,88 @@ def handle_empty_values(value):
 
 def create_collection_schema(header):
     fields = [
-        # Create FieldSchema based on the header
-        FieldSchema(name=col_name, dtype=DataType.STRING if col_name == 'question_id' else DataType.STRING, max_length=256 if col_name != 'question_id' else None)
+        FieldSchema(
+            is_primary=True ,
+            name=col_name,
+            dtype=DataType.INT64
+            if col_name == 'question_id' else DataType.VARCHAR
+            if col_name == 'question_id' else False,
+            max_length=1024 if col_name != 'question_id' else None
+        )
         for col_name in header
     ]
-    logger.info(f"fields:{fields}")
-    fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512))
+    # logger.info(f"fields:{fields}")
+    fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1024))
     return CollectionSchema(fields=fields, description="Dynamic Collection from CSV")
 
+# Extract embedding from text using OpenAI
+def embed(text):
+    return openai.Embedding.create(
+        input=text, 
+        engine='text-embedding-ada-002')["data"][0]["embedding"]
 
 def process_csv_data(file, collection):
-  logger.info(f"Processing CSV data from file: {file}")
-  with open(file, newline='') as f:
-    logger.info(f"Opened file: {file}")
-    reader = csv.reader(f)
-    header = next(reader)  
-    logger.info(f"Processing CSV data - header: {header}")
-    data_to_insert = []
-    
-    for row in reader:
-        row_dict = {header[i]: row[i] for i in range(len(header))}
-        logger.debug(f"row_dict:{row_dict}")
-        text = row_dict['question_id']
-        logger.info(f"text TO Embedding:{text}")
-        try:
-            embedding = openai.Embedding.create(input=text, engine="text-embedding-ada-002")['data'][0]['embedding']
-            logger.info(f"embedding:{embedding[0]}")
-            row_dict['embedding'] = embedding
-        except Exception as embedding_error:
-            logger.error(f"Embedding creation error: {str(embedding_error)}")
-            row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
-        
-        data_to_insert.append(row_dict)
-        logger.debug(f"data_to_insert:{data_to_insert}")
-    try:
-        collection.insert(data_to_insert)
-        logger.info("Data inserted into collection successfully")
-    except Exception as insert_error:
-        logger.error(f"Data insertion error: {str(insert_error)}")
-        
+    logger.info(f"Processing CSV data from file: {file}")
+    # with open(file, newline='') as f:
+    #     logger.info(f"Opened file: {file}")
+    #     reader = csv.reader(f)
+    #     header = next(reader)
+    #     logger.info(f"Processing CSV data - header: {header}")
+    #     data_to_insert = []
+
+    #     for row in reader:
+    #         row_dict = {header[i]: row[i] for i in range(len(header))}
+    #         text = row_dict['question_id']
+    #         logger.info(f"Text to Embedding: {text}")
+
+    #         try:
+    #             embedding_response = openai.Embedding.create(input=text, engine="text-embedding-ada-002")
+    #             logger.info(f"Embedding API Response: {embedding_response}")
+
+    #             if 'data' in embedding_response and embedding_response['data']:
+    #                 embedding = embedding_response['data'][0]['embedding']
+                  
+    #                 if isinstance(embedding, list) and len(embedding) > 0:
+    #                     row_dict['embedding'] = embedding
+    #                 else:
+    #                     logger.error("Invalid embedding data received.")
+    #                     row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+    #             else:
+    #                 logger.error("No valid data received from the Embedding API.")
+    #                 row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+
+    #         except Exception as embedding_error:
+    #             logger.error(f"Embedding creation error: {str(embedding_error)}")
+    #             row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+
+    #         data_to_insert.append(row_dict)
+
+    #     try:
+    #         collection.insert(data_to_insert)
+    #         logger.info("Data inserted into collection successfully")
+    #     except Exception as insert_error:
+    #         logger.error(f"Data insertion error: {str(insert_error)}")
+    with open(file, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader)  # Read the header row to get column names
+
+        for idx, row in enumerate(reader):
+            data_to_insert = []
+            for i, val in enumerate(row):
+                text = val  # Assuming all columns contain text to be embedded
+                embedding = embed(text)
+                if embedding:
+                    data_to_insert.append(idx)  # Append index as the first element
+                    data_to_insert.append(text)  # Append text to be inserted
+                    data_to_insert.append(embedding)  # Append embedding vector
+            if data_to_insert:
+                try:
+                    collection.insert([data_to_insert])
+                except Exception as e:
+                    logger.error(f"Error inserting data into collection: {str(e)}")
+                time.sleep(3) 
+
+
 @app.route('/create_and_store_data', methods=['POST'])
 def create_and_store_data():
     file = 'csv/Questions Master _ ChildOther.csv'
