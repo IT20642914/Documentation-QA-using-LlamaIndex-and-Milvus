@@ -37,12 +37,15 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 
+
 # Extract the book titles
 def csv_load(filepath):
   with open(filepath, newline='') as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
             yield row  # Yield entire row
+            
+
 # Embed text with error handling
 def embed_with_error_handling(text):
     try:
@@ -117,6 +120,7 @@ def search_in_collection(collection_name, search_term):
     search_results = search_with_error_handling(search_term)
     return {search_term: search_results} if search_results else {}
 
+
 # Endpoint to delete a collection
 @app.route('/delete_collection', methods=['DELETE'])
 def delete_collection():
@@ -136,6 +140,8 @@ def delete_collection():
         return jsonify({"message": f"Collection '{collection_name}' deleted successfully."}), 200
     else:
         return jsonify({"message": f"Collection '{collection_name}' does not exist."}), 404
+
+
 
 # Endpoint to get a list of collections
 @app.route('/collections', methods=['GET'])
@@ -162,58 +168,61 @@ def handle_empty_values(value):
 
 def create_collection_schema(header):
     fields = [
-    FieldSchema(
-        is_primary=True if col_name == 'question_id' else False,
-        name=col_name,
-        dtype=DataType.INT64 if col_name == 'question_id' else DataType.VARCHAR,
-        max_length=1024 if col_name != 'question_id' else None
-    )
-    for col_name in header
-]
-
-    fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1024))
-
+        FieldSchema(
+            name=col_name,
+            dtype=DataType.INT64 if col_name == 'question_id' else DataType.VARCHAR,
+            is_primary=True if col_name == 'question_id' else False,
+            max_length=256 if col_name != 'question_id' else None
+        )
+        for col_name in header
+    ]
+    logger.info(f"fields:{fields}")
+    fields.append(FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=512))
     return CollectionSchema(fields=fields, description="Dynamic Collection from CSV")
 
 
-# Extract embedding from text using OpenAI
-def GetEmbedding(text):
-    return openai.Embedding.create(
-        input=text, 
-        engine='text-embedding-ada-002')["data"][0]["embedding"]
 
 def process_csv_data(file, collection):
     logger.info(f"Processing CSV data from file: {file}")
-
     with open(file, newline='') as f:
-        row_count = sum(1 for row in csv.reader(f))
-        COUNT = row_count# Free OpenAI account limited to 100k tokens per month
-        
-        for idx, textRow in enumerate(csv_load(file)):
-            logger.info(f"Processing row {textRow[0]} of {textRow},{idx}")
-            embedding = GetEmbedding(textRow[0])
-            headerList=pd.read_csv(file).columns
-            ins = [{'id': idx,  'embedding': embedding}]
-            data_to_insert = []
-                    
-            ins = {'id': idx, 'embedding': embedding}
-          
-            for i, val in enumerate(textRow):
-                
-                val  # Assuming all columns contain text to be embedded
-                # Avoid assigning 'id' and 'embedding' again; consider other columns
-                if headerList[i] not in ['id', 'embedding']:
-                    ins[headerList[i]] = val  # Assign text to corresponding column in 'ins'
-            collection.insert([ins])
-                        # data_to_insert.append(ins)
-        
-        # collection.insert([data_to_insert])
-            # if data_to_insert:
-            #     try:
-            #         collection.insert([data_to_insert])
-            #     except Exception as e:
-            #         logger.error(f"Error inserting data into collection: {str(e)}")
-            #     time.sleep(3) 
+        logger.info(f"Opened file: {file}")
+        reader = csv.reader(f)
+        header = next(reader)
+        logger.info(f"Processing CSV data - header: {header}")
+        data_to_insert = []
+
+        for row in reader:
+            row_dict = {header[i]: row[i] for i in range(len(header))}
+            text = row_dict['question_id']
+            logger.info(f"Text to Embedding: {text}")
+
+            try:
+                embedding_response = openai.Embedding.create(input=text, engine="text-embedding-ada-002")
+                logger.info(f"Embedding API Response: {embedding_response}")
+
+                if 'data' in embedding_response and embedding_response['data']:
+                    embedding = embedding_response['data'][0]['embedding']
+                    logger.info(f"Embedding: {embedding}")
+                    if isinstance(embedding, list) and len(embedding) > 0:
+                        row_dict['embedding'] = embedding
+                    else:
+                        logger.error("Invalid embedding data received.")
+                        row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+                else:
+                    logger.error("No valid data received from the Embedding API.")
+                    row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+
+            except Exception as embedding_error:
+                logger.error(f"Embedding creation error: {str(embedding_error)}")
+                row_dict['embedding'] = 'N/A'  # Set a default value if embedding creation fails
+
+            data_to_insert.append(row_dict)
+
+        try:
+            collection.insert(data_to_insert)
+            logger.info("Data inserted into collection successfully")
+        except Exception as insert_error:
+            logger.error(f"Data insertion error: {str(insert_error)}")
 
 
 @app.route('/create_and_store_data', methods=['POST'])

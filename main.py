@@ -37,7 +37,7 @@ def csv_load(file):
     with open(file, newline='') as f:
         reader = csv.reader(f, delimiter=',')
         for row in reader:
-            yield row[1]
+            yield row
 
 # Embed text with error handling
 def embed_with_error_handling(text):
@@ -57,7 +57,7 @@ DIMENSION = 1536
 with open(FILE, newline='') as f:
     row_count = sum(1 for row in csv.reader(f))
 # Use the minimum of row_count and a specified maximum count
-COUNT = min(row_count, 100) # Free OpenAI account limited to 100k tokens per month
+COUNT = row_count# Free OpenAI account limited to 100k tokens per month
 
 MILVUS_HOST = os.environ.get('MILVUS_HOST')
 MILVUS_PORT = os.environ.get('MILVUS_PORT')
@@ -81,7 +81,7 @@ if utility.has_collection(COLLECTION_NAME):
 # Create collection schema
 fields = [
     FieldSchema(name='id', dtype=DataType.INT64, description='Ids', is_primary=True, auto_id=False),
-    FieldSchema(name='title', dtype=DataType.VARCHAR, description='Title texts', max_length=200),
+    FieldSchema(name='title', dtype=DataType.VARCHAR, description='Title texts', max_length=1200),
     FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, description='Embedding vectors', dim=DIMENSION)
 ]
 schema = CollectionSchema(fields=fields, description='Title collection')
@@ -99,16 +99,18 @@ logger.info("Created index for the collection.")
 
 # Insert each title and its embedding with error handling
 for idx, text in enumerate(random.sample(sorted(csv_load(FILE)), k=COUNT)):
-    logger.debug(f"Inserting text '{text}' with index '{idx}'.")
-    embedding = embed_with_error_handling(text)
+    logger.debug(f"Inserting text '{text[4]}' with index '{idx}'.")
+    embedding = embed_with_error_handling(text[0])
     if embedding is not None:
-        ins = [[idx], [(text[:198] + '..') if len(text) > 200 else text], [embedding]]
-        try:
-            collection.insert(ins)
-            logger.debug(f"Text '{text}' inserted successfully.")
-            time.sleep(3)  # Free OpenAI account limited to 60 RPM
-        except Exception as e:
-            logger.error(f"Error inserting text '{text}' into collection. Error: {str(e)}")
+        
+        ins = [{'id': idx, 'title': str(text), 'embedding': embedding}]
+    try:
+        collection.insert(ins)
+        logger.debug(f"Text '{text[5]}' inserted successfully.")
+        time.sleep(3)  # Free OpenAI account limited to 60 RPM
+    except Exception as e:
+        logger.error(f"Error inserting text '{text[0]}' into collection. Error: {str(e)}")
+
 
 # Load the collection into memory for searching
 collection.load()
@@ -125,7 +127,7 @@ def search_with_error_handling(text):
                 data=[embedded_text],
                 anns_field="embedding",
                 param=search_params,
-                limit=5,
+                limit=1,
                 output_fields=['title']
             )
             ret = []
@@ -139,11 +141,11 @@ def search_with_error_handling(text):
         logger.error(f"Error searching for text '{text}' in collection. Error: {str(e)}")
         return []
 
-# Perform searches
-search_terms = ['self-improvement', 'landscape']
+# # Perform searches
+# search_terms = ['self-improvement', 'landscape']
 
-for x in search_terms:
-    logger.info(f"Search term: {x}")
-    for result in search_with_error_handling(x):
-        logger.info(result)
-    logger.info('')
+# for x in search_terms:
+#     logger.info(f"Search term: {x}")
+#     for result in search_with_error_handling(x):
+#         logger.info(result)
+#     logger.info('')

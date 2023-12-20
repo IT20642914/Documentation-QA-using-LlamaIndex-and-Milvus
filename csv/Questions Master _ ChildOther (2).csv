@@ -1,0 +1,31 @@
+question_id,question_sub_category,question_means,question,activeQuestion,redFlag_option,criticalFocus,rca_id,impact_id
+2,Child Goals,Q to Child,What is your primary goal from this program? (Observed),1,External_Image,1,11,1
+4,Child Goals,Q to Child,Why do you have this goal? What is driving it? (Observed),1,External,0,11,1
+7,Child Goals,Q to Child,Is the Child's weight target and timeline safe to pursue? (>4-6 lbs/mon) (Observed),1,Extreme weightloss,1,12,1
+9,Social Skills,Q to Child,Do you feel accepted by your peers in school? (Observed),1,No,1,14,6
+10,Social Skills,Q to Both,Do you / your Child have close frendships that are long running?,1,No,0,15,6
+12,Social Skills,Q to Parents,Does your child meet with their friends in person? If not explain. (Observed),1,No,0,16,6
+14,Social Skills,Q to Child,Is the Child passive in social situations?,1,Yes,0,17,6
+17,Social Skills,Q to Child,Do you participate in any sports activities in/after school?,1,No,0,19,5
+18,Social Skills,Q to Child,What is your weekday like? From when you awake to get back into bed?,1,Sedentary,0,20,6
+19,Social Skills,Q to Child,How about the weekends? What do you do typically?,1,Sedentary,0,21,6
+20,Social Skills,Q to Child,Is the Child's physical activity level appropriate for age? (Observed),1,No,0,18,5
+23,Social Skills,Q to Parents,Is the parent aware/involved with their child's social media consumption? (Observed),1,No,0,13,6
+24,Social Skills,Q to Parents,Does your child discuss with you what he's learning from social media?,1,No,0,13,6
+28,Social Skills,Q to Child,Who do you typically follow and why? (Observed),1,Body_Image_Influencers,1,26,6
+29,Intellectual,Q to Child, Is the Child's communication skills appropriate for their age? (Observed),1,No,0,22,5
+31,Intellectual,Q to Child,Do you enjoy school? (Observed),1,No,0,23,5
+32,Intellectual,Q to Child,Do you feel like you need to excel at schoold?,1,Yes,0,24,5
+33,Intellectual,Q to Child,Do you like learning new subjects or challenging topics? ,1,No,0,25,5
+34,Intellectual,Q to Child,Do you enjoy reading? What types of books do you gravitade towards?,1,No,0,27,5
+35,Intellectual,Q to Child,Is the Child tolerant to newer and different ideas?,1,No,0,29,5
+37,Intellectual,Q to Child,What are you most passionate about outside of school-work? (Observed),1,No,0,30,5
+38,Intellectual,Q to Parents,Does your Child have age appropriate time management skills? Are they able to complete their school work and other activities effectively,1,No,0,31,5
+39,Mindful,Q to Child,Does the Child appear engaged and excited about participating in this program? (Observed),1,No,1,32,1
+40,Mindful,Q to Child,Does the Child appear to posses a set of guiding beliefs based on which they lead their life?,1,No,0,33,5
+41,Mindful,Q to Child,Is the Child a positive or hopeful individual? (Observed),1,No,0,34,5
+43,Mindful,Q to Child,Do you enjoy time by yourself without devices?,1,No,0,35,5
+44,Mindful,Q to Child,Does the Child appear to be inquisitive and curious? (Observed),1,No,0,36,5
+45,Mindful,Q to Child,Does the Child appear to be self-confident? (Observed),1,No,0,37,5
+46,Mindful,Q to Both,Do you / your Child get anxious or distressed unexpectedly?,1,Yes,0,38,5
+49,Mindful,Q to Both,Do you/ your Child exhibit excessive and unreasonable anger?,1,Yes,0,39,5

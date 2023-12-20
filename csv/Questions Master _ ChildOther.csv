@@ -1,6 +1,8 @@
-question_id,question_category,question_sub_category,question_means,question,question_response _type,activeQuestion,redFlag_option,criticalFocus,rca_id,choice_options,impact_id
-1,Child Other,Child Goals,Q to Child,What is your primary goal from this program?,Text,1,,,,,1
-2,Child Other,Child Goals,Q to Child,What is your primary goal from this program? (Observed),Choice,1,External_Image,1,11,"[""External_Image"", ""Health_Fitness""]",1
-3,Child Other,Child Goals,Q to Child,Why do you have this goal? What is driving it?,Text,1,,,,,1
-4,Child Other,Child Goals,Q to Child,Why do you have this goal? What is driving it? (Observed),Choice,1,External,,11,"[""Health_Fitness"", ""External""]",1
-5,Child Other,Child Goals,Q to Child,Do you have a target weight that you'd like to reach? (lbs),Numeric,1,,,,,2
+question_id,question_sub_category,question_means,question,activeQuestion,redFlag_option,criticalFocus,rca_id,impact_id
+2,Child Goals,Q to Child,What is your primary goal from this program? (Observed),1,External_Image,1,11,1
+4,Child Goals,Q to Child,Why do you have this goal? What is driving it? (Observed),1,External,0,11,1
+7,Child Goals,Q to Child,Is the Child's weight target and timeline safe to pursue? (>4-6 lbs/mon) (Observed),1,Extreme weightloss,1,12,1
+9,Social Skills,Q to Child,Do you feel accepted by your peers in school? (Observed),1,No,1,14,6
+10,Social Skills,Q to Both,Do you / your Child have close frendships that are long running?,1,No,0,15,6
+12,Social Skills,Q to Parents,Does your child meet with their friends in person? If not explain. (Observed),1,No,0,16,6
+
